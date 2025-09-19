@@ -1,0 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Circular+Std:wght@300;400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Circular Std', sans-serif;
+  background: linear-gradient(135deg, rgba(66 148 200 / 22%), rgba(255 255 255 / 6%));
+  background-size: cover;
+  overflow-y: auto;
+  color: #ffffff;
+}
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  width: 350px;
+}
+
+
+.login-box input,
+.login-box select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: transparent !important;
+  border: 0 !important;
+  font-size: 15px;
+  color: #ffffff;
+  box-shadow: 0 10px 15px -15px;
+  outline: none !important;
+}
+
+.login-box input::placeholder,
+.login-box select::placeholder {
+  color: #ffffff;
+}
+
+.login-box button {
+    width: 30%;
+    padding: 10px;
+    background-color: #ff0000; /* solid red as requested */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s;
+    font-family: 'Poppins';
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .login-container { padding: 16px; }
+  .login-box { width: 100%; padding: 24px; }
+  .login-box input { width: 100%; }
+  .login-box button { width: 100%; }
+}
+
+.login-box button:hover {
+  background-color: #000;
+}
+
+.login-box p {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.login-box a {
+  color: rgb(66 148 200 / 72%);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.login-logo {
+  width: 100px;        /* adjust size */
+  height: auto;
+  margin-bottom: 5px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+
+}
+
+.login-title1 {
+  font-family: "Poppins", sans-serif;
+  margin: 0px;
+}
+
+.login-title2 {
+  font-family: "Poppins", sans-serif;
+  margin-top: 0px;
+  
+}
+
+

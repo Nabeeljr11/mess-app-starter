@@ -1,0 +1,139 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+/* Body with background */
+body {
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background: cadetblue;
+  background-size: cover;
+  overflow-y: auto;
+}
+
+/* Main card container */
+.student-container {
+  text-align: center;
+  padding: 30px;
+  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 15px;
+  margin: 40px auto;
+  max-width: 850px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.25);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Title */
+.title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 25px;
+}
+
+/* Each day row */
+.day-row {
+  margin: 20px 0;
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+}
+
+.day-label {
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+/* Meal buttons */
+.meal-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.meal-btn {
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease-in-out;
+  letter-spacing: 1px;
+  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.meal-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Marked = green */
+.meal-btn.marked {
+  background-color: #4caf50;
+  color: white;
+}
+
+/* Unmarked = red */
+.meal-btn.unmarked {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* Disabled button (today locked) */
+.meal-btn:disabled {
+  background-color: #888;
+  cursor: not-allowed;
+}
+
+/* Logout button wrapper bottom-right */
+.logout-wrapper {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.logout-btn {
+  border: none;
+  background-color: #333;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+  padding: 10px 20px;
+}
+
+.logout-btn:hover {
+  background-color: #000;
+}
+@media (max-width: 480px) {
+  .student-container { margin: 20px 12px; padding: 18px; border-radius: 12px; }
+  .title { font-size: 22px; }
+  .day-row { padding: 12px; }
+  .meal-buttons { gap: 10px; }
+  .meal-btn { padding: 10px 14px; font-size: 14px; }
+  .logout-btn { width: 100%; }
+}
+.meal-btn.marked:disabled {
+  background-color: #4CAF50; /* green */
+  color: white;
+  opacity: 0.7; /* faded to show locked */
+  cursor: not-allowed;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.7);
+}
+
+.meal-btn.unmarked:disabled {
+  background-color: #f44336; /* red */
+  color: white;
+  opacity: 0.7;
+  cursor: not-allowed;
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.7);
+}

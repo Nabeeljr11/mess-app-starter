@@ -1,0 +1,179 @@
+@import url('https://fonts.googleapis.com/css2?family=Circular+Std:wght@300;400;500;600;700&display=swap');
+
+body {
+  margin: 0;
+  font-family: 'Circular Std', sans-serif;
+  background: linear-gradient(135deg, rgb(66 148 200 / 22%), rgba(255 255 255 / 6%));
+  background-size: cover;
+  overflow-y: auto;
+  color: #ffffff;
+}
+
+.signup-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+}
+
+.signup-box {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  text-align: center;
+  width: 350px;
+}
+
+/*.signup-box h2 {
+  font-size: 26px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #222;
+}*/
+
+/* Text + password inputs */
+.signup-box input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: transparent !important;
+  border: 0 !important;
+  font-size: 15px;
+  box-shadow: 0 10px 15px -15px;
+  outline: none !important;
+  color: #ffffff;
+}
+
+.signup-box input::placeholder {
+  color: #ffffff;
+}
+
+/* Dropdown (MEA, Year, Branch etc.) */
+.signup-box select {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  background: transparent !important;
+  border: 0 !important;
+  font-size: 15px;
+  box-shadow: 0 10px 15px -15px; /* match input shadow */
+  cursor: pointer;
+  outline: none !important;
+  font-family: "Poppins", sans-serif;
+  color: #ffffff;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg fill='%23ffffff' height='20' viewBox='0 0 24 24' width='20' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  padding-right: 40px;
+}
+
+/* Button */
+.signup-box button {
+  width: 100%;
+  padding: 12px;
+  background-color: #ff0000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-family: "Poppins";
+  margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-box button:hover {
+  background-color: #000;
+}
+
+.signup-box p {
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.signup-box a {
+  color: rgb(66 148 200 / 72%);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+/* Shared style for inputs & dropdowns - consolidated into rules above */
+
+/* Dropdown option text */
+.signup-box select option {
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  color: #0b0b0b; /* native dropdown list */
+  padding: 10px;
+}
+
+/* Focus effect */
+.signup-box input:focus,
+.signup-box select:focus {
+  border: 0 !important;
+  box-shadow: 0 10px 15px -15px !important; /* keep same subtle shadow */
+  outline: none !important;
+}
+
+/* Small rounded arrow background */
+.signup-box select {
+  background-position: calc(100% - 12px) center;
+  background-origin: content-box;
+}
+/* Make select text same as inputs */
+.signup-box select { /* ensure white, same as inputs */
+  color: #ffffff;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+  opacity: 1;
+}
+
+/* Ensure options inside dropdown also styled */
+.signup-box select option {
+  color: #222;
+  font-family: "Poppins", sans-serif;
+  font-size: 15px;
+}
+
+/* Placeholder-like first option (Select Year/Branch/Hostel) */
+.signup-box select option[value=""] {
+  color: #888;   /* lighter gray for placeholder */
+}
+.signup-logo {
+  width: 100px;        /* adjust size */
+  height: auto;
+  margin-bottom: 15px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.signup-title1 {
+  font-family: "Poppins", sans-serif;
+  margin: 0px;
+}
+.signup-title2 {
+  font-family: "Poppins", sans-serif;
+  margin-top: 0px;
+  
+
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .signup-box { width: 100%; padding: 24px; }
+}
