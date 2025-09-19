@@ -66,3 +66,58 @@ You're about to initialize a Firebase project in this directory:
 [info] 
 [info] +  Success! Logged into GitHub as Nabeeljr11 
 [info] 
+[debug] [2025-09-19T02:33:14.435Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:33:14.946Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key 401
+[debug] [2025-09-19T02:33:14.946Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Bad credentials","documentation_url":"https://docs.github.com/rest","status":"401"}
+[debug] [2025-09-19T02:33:22.470Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:33:22.894Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key 401
+[debug] [2025-09-19T02:33:22.894Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Bad credentials","documentation_url":"https://docs.github.com/rest","status":"401"}
+[debug] [2025-09-19T02:33:47.451Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:33:47.858Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key 401
+[debug] [2025-09-19T02:33:47.858Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Bad credentials","documentation_url":"https://docs.github.com/rest","status":"401"}
+[debug] [2025-09-19T02:33:48.669Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:33:49.052Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key 404
+[debug] [2025-09-19T02:33:49.052Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+[info] 
+[info] 
+[error] !  The provided authorization cannot be used with this repository. If this repository is in an organization, did you remember to grant access? 
+[info] 
+[info] i  Action required: Visit this URL to ensure access has been granted to the appropriate organization(s) for the Firebase CLI GitHub OAuth App: 
+[info] https://github.com/settings/connections/applications/89cf50f02ac6aaed3484
+[info] 
+[debug] [2025-09-19T02:33:52.993Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:33:53.418Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key 404
+[debug] [2025-09-19T02:33:53.418Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starterNabeeljr11/mess-app-starterNabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+[info] 
+[info] 
+[error] !  The provided authorization cannot be used with this repository. If this repository is in an organization, did you remember to grant access? 
+[info] 
+[info] i  Action required: Visit this URL to ensure access has been granted to the appropriate organization(s) for the Firebase CLI GitHub OAuth App: 
+[info] https://github.com/settings/connections/applications/89cf50f02ac6aaed3484
+[info] 
+[debug] [2025-09-19T02:34:09.172Z] >>> [apiv2][query] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:34:09.570Z] <<< [apiv2][status] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key 401
+[debug] [2025-09-19T02:34:09.570Z] <<< [apiv2][body] GET https://api.github.com/repos/Nabeeljr11/mess-app-starter/actions/secrets/public-key {"message":"Bad credentials","documentation_url":"https://docs.github.com/rest","status":"401"}
+[debug] [2025-09-19T02:36:40.625Z] >>> [apiv2][query] GET https://api.github.com/repos/git remove -v/actions/secrets/public-key type=owner
+[debug] [2025-09-19T02:36:41.072Z] <<< [apiv2][status] GET https://api.github.com/repos/git remove -v/actions/secrets/public-key 404
+[debug] [2025-09-19T02:36:41.073Z] <<< [apiv2][body] GET https://api.github.com/repos/git remove -v/actions/secrets/public-key {"message":"Not Found","documentation_url":"https://docs.github.com/rest","status":"404"}
+[info] 
+[info] 
+[error] !  The provided authorization cannot be used with this repository. If this repository is in an organization, did you remember to grant access? 
+[info] 
+[info] i  Action required: Visit this URL to ensure access has been granted to the appropriate organization(s) for the Firebase CLI GitHub OAuth App: 
+[info] https://github.com/settings/connections/applications/89cf50f02ac6aaed3484
+[info] 
+[debug] [2025-09-19T02:36:43.785Z] ExitPromptError: User force closed the prompt with SIGINT
+    at Interface.sigint (C:\Users\mohdn\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\@inquirer\core\dist\commonjs\lib\create-prompt.js:101:37)
+    at Interface.emit (node:events:518:28)
+    at Interface.emit (node:domain:489:12)
+    at [_ttyWrite] [as _ttyWrite] (node:internal/readline/interface:1132:18)
+    at ReadStream.onkeypress (node:internal/readline/interface:271:20)
+    at ReadStream.emit (node:events:530:35)
+    at ReadStream.emit (node:domain:489:12)
+    at emitKeys (node:internal/readline/utils:370:14)
+    at emitKeys.next (<anonymous>)
+    at ReadStream.onData (node:internal/readline/emitKeypressEvents:64:36)
+[error] 
+[error] Error: An unexpected error has occurred.
