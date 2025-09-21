@@ -4,5 +4,8 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/mess-app-starter/',  // 👈 important for GitHub Pages
+  base: '/', // ✅ root path for Vercel
+  build: {
+    outDir: 'dist',
+  },
 })
