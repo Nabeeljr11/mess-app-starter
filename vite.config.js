@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/mess-app-starter/',   // 👈 replace with your repo name
+  base: '/mess-app-starter/',  // 👈 important for GitHub Pages
 })
