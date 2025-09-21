@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    
     "dev": "vite",
     "start": "vite",
-    "build": "vite build",
+    "build": "node ./node_modules/vite/bin/vite.js build",
     "preview": "vite preview",
     "serve": "vite preview",
     "deploy": "gh-pages -d dist",
