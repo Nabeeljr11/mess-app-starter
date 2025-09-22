@@ -75,7 +75,12 @@ function App() {
   };
 
   if (loading) {
-    return <h2>Loading...</h2>;
+    return (
+      <div className="corner-loading" aria-label="Loading">
+        <div className="corner-spinner"></div>
+        <span className="corner-text">Signing you in…</span>
+      </div>
+    );
   }
 
   if (!currentUser) {

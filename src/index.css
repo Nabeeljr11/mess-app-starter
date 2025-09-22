@@ -6,3 +6,37 @@ body {
   background-color: #121212;
   color: #ffffff;
 }
+
+/* Top-left minimal loading indicator shown before the app decides the route */
+.corner-loading {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 8px 12px;
+  border-radius: 999px;
+  z-index: 10000;
+}
+
+.corner-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #3b82f6; /* blue */
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.corner-text {
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
