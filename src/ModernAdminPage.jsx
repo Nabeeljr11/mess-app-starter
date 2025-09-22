@@ -1327,7 +1327,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
         </div>
       )}
 
-      {/* Requests Modal */}
+      {/* Requests (Pending Approvals) Modal */}
       {showRequests && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -1336,33 +1336,50 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
               <button className="close-btn" onClick={() => setShowRequests(false)}>×</button>
             </div>
             <div className="modal-body">
-              <div className="requests-list">
-                {allUsers.filter(u => u.status === "pending").map((user) => (
-                  <div key={user.id || user.email} className="request-card">
-                    <div className="request-info">
-                      <h4>{user.name || 'Unknown'}</h4>
-                      <p>{user.email}</p>
-                      <p>Year: {user.year || 'N/A'} | Branch: {user.branch || 'N/A'}</p>
-                      <p>Phone: {user.phone || 'N/A'} | Hostel: {user.mea || 'N/A'}</p>
+              <div className="users-list">
+                {allUsers.filter(u => (u.status || 'pending') === 'pending').map((user) => (
+                  <div key={user.id || user.email} className="user-card">
+                    <div className="user-info">
+                      <div className="user-avatar">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div className="user-details">
+                        <h4>{user.name || 'Unknown'}</h4>
+                        <p>{user.email}</p>
+                        {(user.department || user.branch || user.year) && (
+                          <p>{user.department || user.branch} {user.year ? `• ${user.year}` : ''}</p>
+                        )}
+                        <span className={`status-badge ${user.status || 'pending'}`}>
+                          {user.status || 'pending'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="request-actions">
-                      <button 
+                    <div className="user-actions">
+                      <button
                         className="approve-btn"
-                        onClick={() => updateUserStatus(user.email, "approved")}
+                        onClick={() => updateUserStatus(user.email, 'approved')}
                       >
                         ✅ Approve
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => updateUserStatus(user.email, 'rejected')}
+                      >
+                        ❌ Reject
                       </button>
                     </div>
                   </div>
                 ))}
-                {allUsers.filter(u => u.status === "pending").length === 0 && (
-                  <p className="no-requests">No pending requests</p>
+                {allUsers.filter(u => (u.status || 'pending') === 'pending').length === 0 && (
+                  <div className="no-requests">No pending requests</div>
                 )}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      
 
       {/* Suggestions Modal - Unread only */}
       {showSuggestions && (

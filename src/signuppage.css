@@ -38,7 +38,7 @@ body {
 .signup-box input {
   width: 100%;
   padding: 12px;
-  margin: 10px 0;
+  margin: 12px 0;
   border-radius: 8px;
   background: transparent !important;
   border: 0 !important;
@@ -56,7 +56,7 @@ body {
 .signup-box select {
   width: 100%;
   padding: 12px;
-  margin: 10px 0;
+  margin: 12px 0;
   border-radius: 8px;
   background: transparent !important;
   border: 0 !important;
@@ -175,5 +175,7 @@ body {
 
 /* Mobile responsiveness */
 @media (max-width: 480px) {
-  .signup-box { width: 100%; padding: 24px; }
+  .signup-box { width: 100%; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+  .signup-box input { margin: 14px 0; }
+  .signup-box select { margin: 14px 0; }
 }

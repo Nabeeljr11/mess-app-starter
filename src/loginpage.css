@@ -31,7 +31,7 @@ body {
 .login-box select {
   width: 100%;
   padding: 12px;
-  margin: 10px 0;
+  margin: 12px 0;
   border-radius: 8px;
   background: transparent !important;
   border: 0 !important;
@@ -67,7 +67,9 @@ body {
 @media (max-width: 480px) {
   .login-container { padding: 16px; }
   .login-box { width: 100%; padding: 24px; }
-  .login-box input { width: 100%; }
+  .login-box input { width: 100%; margin: 14px 0; }
+  .login-box select { margin: 14px 0; }
+  .login-box { display: flex; flex-direction: column; gap: 8px; }
   .login-box button { width: 100%; }
 }
 
