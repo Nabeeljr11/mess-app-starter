@@ -672,7 +672,8 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   const getStats = () => {
     const pendingUsers = allUsers.filter(u => u.status === "pending").length;
     const approvedUsers = allUsers.filter(u => u.status === "approved").length;
-    const totalUsers = allUsers.length;
+    // Total users should count only approved users as requested
+    const totalUsers = approvedUsers;
     const todayMeals = mealCounts[new Date().toISOString().split("T")[0]] || { breakfast: 0, lunch: 0, supper: 0 };
     
     return {
@@ -947,6 +948,12 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
                         onClick={() => updateUserStatus(user.email, "approved")}
                       >
                         ✅ Approve
+                      </button>
+                      <button
+                        className="reject-btn"
+                        onClick={() => updateUserStatus(user.email, "rejected")}
+                      >
+                        ❌ Reject
                       </button>
                     </div>
                   </div>

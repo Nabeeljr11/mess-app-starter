@@ -6,6 +6,9 @@ import "./StudentPage.css";
 function StudentPage({ currentUser, onLogout }) {
   const [mealData, setMealData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [selectedMonth, setSelectedMonth] = useState(
+    new Date().toISOString().slice(0, 7) // YYYY-MM
+  );
 
   // Generate today + next 7 days = 8 days
   const getNext8Days = () => {
@@ -21,6 +24,27 @@ function StudentPage({ currentUser, onLogout }) {
   };
 
   const days = getNext8Days();
+
+  // Get all days in a given month (YYYY-MM)
+  const getDaysInMonth = (yyyyMm) => {
+    const [y, m] = yyyyMm.split("-").map((v) => parseInt(v, 10));
+    const first = new Date(y, m - 1, 1);
+    const result = [];
+    while (first.getMonth() === m - 1) {
+      const dateStr = first.toISOString().split("T")[0];
+      result.push(dateStr);
+      first.setDate(first.getDate() + 1);
+    }
+    return result;
+  };
+
+  const monthName = (yyyyMm) => {
+    const [y, m] = yyyyMm.split("-").map((v) => parseInt(v, 10));
+    return new Date(y, m - 1, 1).toLocaleString(undefined, {
+      month: "long",
+      year: "numeric",
+    });
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,25 +101,71 @@ function StudentPage({ currentUser, onLogout }) {
   return (
     <div className="student-container">
       <h2 className="title">🍽️ Mark Your Meals</h2>
-      {days.map((day) => (
-        <div key={day} className="day-row">
-          <h3 className="day-label">
-            {day} {day === new Date().toISOString().split("T")[0] ? "(Locked)" : ""}
-          </h3>
-          <div className="meal-buttons">
-            {["breakfast", "lunch", "supper"].map((meal) => (
-              <button
-                key={meal}
-                className={`meal-btn ${mealData[day]?.[meal] ? "marked" : "unmarked"}`}
-                onClick={() => toggleMeal(day, meal)}
-                disabled={day === new Date().toISOString().split("T")[0]}
-              >
-                {meal.toUpperCase()} {mealData[day]?.[meal] ? "✓" : "✗"}
-              </button>
-            ))}
+
+      {/* Month selector and label */}
+      <div className="month-controls">
+        <label htmlFor="monthPicker" className="month-label">Select Month</label>
+        <input
+          id="monthPicker"
+          type="month"
+          className="month-input"
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+        />
+      </div>
+
+      <h3 className="month-title">📅 {monthName(selectedMonth)}</h3>
+
+      {/* For the current month, keep the upcoming marking section */}
+      {selectedMonth === new Date().toISOString().slice(0, 7) && (
+        <>
+          {days.map((day) => (
+            <div key={day} className="day-row">
+              <h3 className="day-label">
+                {day} {day === new Date().toISOString().split("T")[0] ? "(Locked)" : ""}
+              </h3>
+              <div className="meal-buttons">
+                {["breakfast", "lunch", "supper"].map((meal) => (
+                  <button
+                    key={meal}
+                    className={`meal-btn ${mealData[day]?.[meal] ? "marked" : "unmarked"}`}
+                    onClick={() => toggleMeal(day, meal)}
+                    disabled={day === new Date().toISOString().split("T")[0]}
+                  >
+                    {meal.toUpperCase()} {mealData[day]?.[meal] ? "✓" : "✗"}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* Monthly history (read-only) */}
+      <div className="history-section">
+        <h4 className="history-title">Marking History</h4>
+        <div className="history-table">
+          <div className="history-row history-row--head">
+            <div className="history-cell">Date</div>
+            <div className="history-cell">Breakfast</div>
+            <div className="history-cell">Lunch</div>
+            <div className="history-cell">Supper</div>
           </div>
+          {getDaysInMonth(selectedMonth).map((d) => {
+            const b = mealData[d]?.breakfast || false;
+            const l = mealData[d]?.lunch || false;
+            const s = mealData[d]?.supper || false;
+            return (
+              <div key={d} className="history-row">
+                <div className="history-cell history-date">{d}</div>
+                <div className={`history-cell ${b ? "ok" : "no"}`}>{b ? "✓" : "✗"}</div>
+                <div className={`history-cell ${l ? "ok" : "no"}`}>{l ? "✓" : "✗"}</div>
+                <div className={`history-cell ${s ? "ok" : "no"}`}>{s ? "✓" : "✗"}</div>
+              </div>
+            );
+          })}
         </div>
-      ))}
+      </div>
 
       <div className="logout-wrapper">
         <button className="logout-btn" onClick={onLogout}>

@@ -32,6 +32,34 @@ body {
   margin-bottom: 25px;
 }
 
+/* Month selector */
+.month-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.month-label {
+  font-weight: 600;
+  color: #333;
+}
+
+.month-input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.month-title {
+  margin: 6px 0 14px;
+  font-size: 20px;
+  color: #222;
+}
+
 /* Each day row */
 .day-row {
   margin: 20px 0;
@@ -92,6 +120,50 @@ body {
   cursor: not-allowed;
 }
 
+/* History section */
+.history-section {
+  margin-top: 20px;
+  text-align: left;
+}
+
+.history-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.history-table {
+  display: grid;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+}
+
+.history-row--head {
+  background: #f7f7f7;
+  font-weight: 600;
+}
+
+.history-cell {
+  padding: 10px 12px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+}
+
+.history-date {
+  font-weight: 500;
+}
+
+.history-cell.ok { color: #2e7d32; }
+.history-cell.no { color: #c62828; }
+
 /* Logout button wrapper bottom-right */
 .logout-wrapper {
   margin-top: auto;
@@ -117,9 +189,12 @@ body {
 @media (max-width: 480px) {
   .student-container { margin: 20px 12px; padding: 18px; border-radius: 12px; }
   .title { font-size: 22px; }
+  .month-controls { gap: 8px; }
+  .month-input { width: 100%; }
   .day-row { padding: 12px; }
   .meal-buttons { gap: 10px; }
   .meal-btn { padding: 10px 14px; font-size: 14px; }
+  .history-row { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
   .logout-btn { width: 100%; }
 }
 .meal-btn.marked:disabled {

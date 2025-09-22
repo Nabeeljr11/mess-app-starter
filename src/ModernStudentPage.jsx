@@ -38,6 +38,12 @@ function ModernStudentPage({ currentUser, onLogout }) {
   });
   const [feesData, setFeesData] = useState({ months: {}, pendingTotal: 0 });
   const [bunchDetails, setBunchDetails] = useState(null);
+  // History tab state
+  const [historySelectedMonth, setHistorySelectedMonth] = useState(
+    `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`
+  );
+  const [historyMeals, setHistoryMeals] = useState({});
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   // Fetch trusted server time once
   useEffect(() => {
@@ -91,22 +97,25 @@ function ModernStudentPage({ currentUser, onLogout }) {
         upcomingDays.forEach((day) => {
           if (!mealsData[day.date]) {
             if (day.date > today) {
+              // Future dates default to marked
               mealsData[day.date] = {
                 breakfast: true,
                 lunch: true,
                 supper: true,
               };
             } else if (day.date < today) {
+              // Past dates default to unmarked
               mealsData[day.date] = {
                 breakfast: false,
                 lunch: false,
                 supper: false,
               };
             } else {
+              // Today defaults to unmarked (and stays locked in UI)
               mealsData[day.date] = {
-                breakfast: true,
-                lunch: true,
-                supper: true,
+                breakfast: false,
+                lunch: false,
+                supper: false,
               };
             }
           }
@@ -193,6 +202,46 @@ function ModernStudentPage({ currentUser, onLogout }) {
       console.error("Error updating meal:", error);
     }
   };
+
+  // ===== Helpers for history tab =====
+  const getDaysInMonth = (yyyyMm) => {
+    const [y, m] = yyyyMm.split("-").map((v) => parseInt(v, 10));
+    const first = new Date(y, m - 1, 1);
+    const result = [];
+    while (first.getMonth() === m - 1) {
+      result.push(first.toISOString().split("T")[0]);
+      first.setDate(first.getDate() + 1);
+    }
+    return result;
+  };
+
+  const monthName = (yyyyMm) => {
+    const [y, m] = yyyyMm.split("-").map((v) => parseInt(v, 10));
+    return new Date(y, m - 1, 1).toLocaleString(undefined, { month: "long", year: "numeric" });
+  };
+
+  // Load selected month meals for history tab
+  useEffect(() => {
+    const loadHistory = async () => {
+      const currentKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+      setHistoryLoading(true);
+      try {
+        if (historySelectedMonth === currentKey) {
+          setHistoryMeals(meals || {});
+        } else {
+          const mealsRef = doc(db, "meals", historySelectedMonth);
+          const snap = await getDoc(mealsRef);
+          setHistoryMeals(snap.exists() ? snap.data() : {});
+        }
+      } catch (e) {
+        console.error("Failed to load history month:", e);
+        setHistoryMeals({});
+      } finally {
+        setHistoryLoading(false);
+      }
+    };
+    loadHistory();
+  }, [historySelectedMonth, meals, currentMonth, currentYear]);
 
   // Generate upcoming days based on server time
   const getUpcomingDays = () => {
@@ -326,6 +375,12 @@ function ModernStudentPage({ currentUser, onLogout }) {
                 <p>Select your meals</p>
               </div>
 
+              <div className="feature-card" onClick={() => setActiveTab("history")}>
+                <div className="feature-icon">🗓️</div>
+                <h4>Marking History</h4>
+                <p>View past months</p>
+              </div>
+
               <div className="feature-card" onClick={() => setActiveTab("suggestions")}>
                 <div className="feature-icon">💡</div>
                 <h4>Suggestions</h4>
@@ -338,6 +393,57 @@ function ModernStudentPage({ currentUser, onLogout }) {
                 <p>Get help</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === "history" && (
+          <div className="tab-content">
+            <div className="meals-header">
+              <h2>Marking History</h2>
+              <p>See your selections for any month</p>
+            </div>
+
+            <div className="month-controls">
+              <label htmlFor="histMonth" className="month-label">Select Month</label>
+              <input
+                id="histMonth"
+                type="month"
+                className="month-input"
+                value={historySelectedMonth}
+                onChange={(e) => setHistorySelectedMonth(e.target.value)}
+              />
+            </div>
+
+            <h3 className="month-title">📅 {monthName(historySelectedMonth)}</h3>
+
+            {historyLoading ? (
+              <div className="loading-spinner"><div className="spinner"></div><p>Loading...</p></div>
+            ) : (
+              <div className="history-section">
+                <h4 className="history-title">Monthly Summary</h4>
+                <div className="history-table">
+                  <div className="history-row history-row--head">
+                    <div className="history-cell">Date</div>
+                    <div className="history-cell">Breakfast</div>
+                    <div className="history-cell">Lunch</div>
+                    <div className="history-cell">Supper</div>
+                  </div>
+                  {getDaysInMonth(historySelectedMonth).map((d) => {
+                    const b = historyMeals?.[d]?.breakfast || false;
+                    const l = historyMeals?.[d]?.lunch || false;
+                    const s = historyMeals?.[d]?.supper || false;
+                    return (
+                      <div key={d} className="history-row">
+                        <div className="history-cell history-date">{d}</div>
+                        <div className={`history-cell ${b ? "ok" : "no"}`}>{b ? "✓" : "✗"}</div>
+                        <div className={`history-cell ${l ? "ok" : "no"}`}>{l ? "✓" : "✗"}</div>
+                        <div className={`history-cell ${s ? "ok" : "no"}`}>{s ? "✓" : "✗"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

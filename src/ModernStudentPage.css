@@ -318,6 +318,36 @@ body {
   font-size: 1rem;
 }
 
+.month-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin: 10px 0 6px;
+}
+
+.month-label {
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.month-input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #333333;
+  font-family: inherit;
+  font-size: 14px;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.month-title {
+  margin: 6px 0 14px;
+  font-size: 20px;
+  color: #ffffff;
+  text-align: center;
+}
+
 .meals-calendar {
   display: flex;
   flex-direction: column;
@@ -986,6 +1016,52 @@ body {
 
 .legend-color.blue {
   background: rgb(66 148 200 / 72%);
+}
+
+/* History table (read-only) */
+.history-section {
+  margin-top: 10px;
+}
+
+.history-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.history-table {
+  display: grid;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  background: #1a1a1a;
+}
+
+.history-row--head {
+  background: #2a2a2a;
+  font-weight: 600;
+}
+
+.history-cell {
+  padding: 10px 12px;
+  border-bottom: 1px solid #333333;
+  display: flex;
+  align-items: center;
+  color: #ffffff;
+}
+
+.history-date { font-weight: 500; }
+.history-cell.ok { color: #34d399; }
+.history-cell.no { color: #f87171; }
+
+@media (max-width: 480px) {
+  .history-row { grid-template-columns: 1.6fr 1fr 1fr 1fr; }
 }
 
 /* Bill Summary Updates */
