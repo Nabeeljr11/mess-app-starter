@@ -1427,29 +1427,29 @@ input:checked + .toggle-slider:before {
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
-  transition: border-color 0.2s;
-  background: transparent;
+  transition: border-color 0.2s, background-color 0.2s;
+  background: #696969; /* dim gray */
   color: #ffffff;
-  border: outset;
-    border-color: dimgray;
+  border: 1px solid #4b5563;
 }
 
 .form-input {
   width: 100%;
-  padding: 16px 20px;
-  border: none;
-  border-radius: 12px;
-  font-size: 1rem;
+  padding: 14px 16px;
+  border: 1px solid #4b5563;
+  border-radius: 10px;
+  font-size: 0.95rem;
   font-family: inherit;
   color: #ffffff;
   transition: all 0.2s ease;
-  background: transparent;
+  background: #696969; /* dim gray */
 }
 
 .form-input:focus,
 .form-select:focus {
   outline: none;
-  box-shadow: none;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.12);
+  background: #5a5a5a;
 }
 
 .form-input::placeholder {

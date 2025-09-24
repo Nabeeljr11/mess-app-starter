@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db, auth } from "./firebase";
+import { getFunctions, httpsCallable } from "firebase/functions";
 import {
   collection,
   getDocs,
@@ -127,6 +128,41 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   
   const todayStr = new Date().toISOString().split("T")[0];
   const currentKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+  const [serverEffectiveDate, setServerEffectiveDate] = useState(null); // YYYY-MM-DD from server
+
+  // Fetch server effective date once and set up auto-refresh at server midnight
+  useEffect(() => {
+    const functions = getFunctions();
+    const getServerNow = httpsCallable(functions, "getServerNow");
+
+    let stopped = false;
+
+    const init = async () => {
+      try {
+        const res = await getServerNow();
+        const eff = res?.data?.effectiveDate;
+        if (eff) setServerEffectiveDate(eff);
+      } catch (e) {
+        // ignore; admin can continue without server date
+      }
+    };
+
+    const check = async () => {
+      try {
+        const res = await getServerNow();
+        const eff = res?.data?.effectiveDate;
+        if (!stopped && eff && serverEffectiveDate && eff !== serverEffectiveDate) {
+          window.location.reload();
+        }
+      } catch (e) {
+        // ignore transient
+      }
+    };
+
+    init();
+    const id = setInterval(check, 60 * 1000);
+    return () => { stopped = true; clearInterval(id); };
+  }, [serverEffectiveDate]);
 
   // Recalculate meal counts when monthly users change
   useEffect(() => {
@@ -145,14 +181,21 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
         }
 
         allUsers.forEach((user) => {
+          const isMonthly = monthlyUsers.includes(user.email);
+          if (!isMonthly) return; // Only count meals for users included in the monthly list
+
           const userMeals = user.meals || {};
           nextDays.forEach((day) => {
             const meals = userMeals[day];
             if (meals) {
-              // Count only explicit markings
               ["breakfast", "lunch", "supper"].forEach((meal) => {
                 if (meals[meal]) counts[day][meal] += 1;
               });
+            } else if (day > new Date().toISOString().split("T")[0]) {
+              // Monthly user without explicit marking for a future day -> assume all meals
+              counts[day].breakfast += 1;
+              counts[day].lunch += 1;
+              counts[day].supper += 1;
             }
           });
         });
@@ -246,7 +289,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   const toggleUserForMonth = async (email) => {
     try {
       const user = allUsers.find((u) => u.email === email);
-      if (!user || (user.status && user.status !== "approved")) {
+      if (!user || ((user.status || '').toLowerCase() !== "approved")) {
         alert("⚠️ Only approved users can be added to the monthly list.");
         return;
       }
@@ -670,8 +713,8 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
 
   // Get statistics
   const getStats = () => {
-    const pendingUsers = allUsers.filter(u => u.status === "pending").length;
-    const approvedUsers = allUsers.filter(u => u.status === "approved").length;
+    const pendingUsers = allUsers.filter(u => ((u.status || 'pending').toLowerCase() === "pending")).length;
+    const approvedUsers = allUsers.filter(u => ((u.status || '').toLowerCase() === "approved")).length;
     // Total users should count only approved users as requested
     const totalUsers = approvedUsers;
     const todayMeals = mealCounts[new Date().toISOString().split("T")[0]] || { breakfast: 0, lunch: 0, supper: 0 };
@@ -697,6 +740,43 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   }
 
   const stats = getStats();
+
+  // Inline component for fees history (must be defined in scope before usage)
+  const TxHistory = ({ userId }) => {
+    const [data, setData] = useState(null);
+    useEffect(() => {
+      const load = async () => {
+        const ref = doc(db, "fees", userId);
+        const snap = await getDoc(ref);
+        setData(snap.exists() ? snap.data() : { months: {}, pendingTotal: 0 });
+      };
+      load();
+    }, [userId]);
+    const months = Object.entries(data?.months || {}).sort(([a], [b]) => a.localeCompare(b));
+    return (
+      <div className="generated-report">
+        <h4>All Transactions</h4>
+        <div className="report-table">
+          <div className="report-header"><span>Month</span><span>Fee</span><span>Paid</span><span>Pending</span></div>
+          {months.map(([k, v]) => (
+            <div key={k} className="report-row"><span>{k}</span><span>₹{v.fee || 0}</span><span>₹{v.paid || 0}</span><span>₹{Math.max((v.fee || 0) - (v.paid || 0), 0)}</span></div>
+          ))}
+        </div>
+        <div className="report-actions">
+          <button className="export-btn" onClick={() => {
+            const rows = [["Month", "Fee", "Paid", "Pending"], ...months.map(([k, v]) => [k, v.fee || 0, v.paid || 0, Math.max((v.fee || 0) - (v.paid || 0), 0)])];
+            const csv = rows.map(r => r.join(",")).join("\n");
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.setAttribute('download', 'transaction_history_' + userId + '.csv');
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          }}>⬇️ Export CSV</button>
+          <div style={{ marginLeft: 'auto', fontWeight: 600 }}>Pending Total: ₹{data?.pendingTotal || 0}</div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="modern-admin-container">
@@ -740,44 +820,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
       )}
 
       {/* Inline component for fees history */}
-      {(() => {
-        function TxHistory({ userId }) {
-          const [data, setData] = React.useState(null);
-          React.useEffect(() => {
-            const load = async () => {
-              const ref = doc(db, "fees", userId);
-              const snap = await getDoc(ref);
-              setData(snap.exists() ? snap.data() : { months: {}, pendingTotal: 0 });
-            };
-            load();
-          }, [userId]);
-          const months = Object.entries(data?.months || {}).sort(([a],[b]) => a.localeCompare(b));
-          return (
-            <div className="generated-report">
-              <h4>All Transactions</h4>
-              <div className="report-table">
-                <div className="report-header"><span>Month</span><span>Fee</span><span>Paid</span><span>Pending</span></div>
-                {months.map(([k,v]) => (
-                  <div key={k} className="report-row"><span>{k}</span><span>₹{v.fee||0}</span><span>₹{v.paid||0}</span><span>₹{Math.max((v.fee||0)-(v.paid||0),0)}</span></div>
-                ))}
-              </div>
-              <div className="report-actions">
-                <button className="export-btn" onClick={() => {
-                  const rows = [["Month","Fee","Paid","Pending"], ...months.map(([k,v]) => [k, v.fee||0, v.paid||0, Math.max((v.fee||0)-(v.paid||0),0)])];
-                  const csv = rows.map(r=>r.join(",")).join("\n");
-                  const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
-                  const url = URL.createObjectURL(blob);
-                  const a=document.createElement('a');
-                  a.href=url; a.setAttribute('download', 'transaction_history_'+userId+'.csv');
-                  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                }}>⬇️ Export CSV</button>
-                <div style={{marginLeft:'auto', fontWeight:600}}>Pending Total: ₹{data?.pendingTotal||0}</div>
-              </div>
-            </div>
-          );
-        }
-        return null;
-      })()}
+      {/* (removed inline IIFE; TxHistory is now defined in scope above) */}
         {activeTab === "home" && (
           <div className="tab-content">
             <div className="welcome-section">
@@ -930,7 +973,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
             <div className="users-section">
               <h3>Pending Approvals ({stats.pendingUsers})</h3>
               <div className="users-list">
-                {allUsers.filter(u => u.status === "pending").map((user) => (
+                {allUsers.filter(u => ((u.status || 'pending').toLowerCase() === "pending")).map((user) => (
                   <div key={user.id} className="user-card">
                     <div className="user-info">
                       <div className="user-avatar">
@@ -958,7 +1001,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
                     </div>
                   </div>
                 ))}
-                {allUsers.filter(u => u.status === "pending").length === 0 && (
+                {allUsers.filter(u => ((u.status || 'pending').toLowerCase() === "pending")).length === 0 && (
                   <p className="no-pending">No pending requests</p>
                 )}
               </div>
@@ -995,7 +1038,7 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
                 </div>
               </div>
               <div className="users-list">
-                {allUsers.filter(u => u.status === "approved").map((user) => (
+                {allUsers.filter(u => ((u.status || '').toLowerCase() === "approved")).map((user) => (
                   <div key={user.id} className="user-card">
                     <div className="user-info">
                       <div className="user-avatar">

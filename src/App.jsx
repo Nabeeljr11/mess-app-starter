@@ -31,8 +31,9 @@ function App() {
 
           if (docSnap.exists()) {
             const userData = docSnap.data();
+            const status = (userData.status || "").toLowerCase();
 
-            if (userData.status === "pending") {
+            if (status === "pending") {
               alert("⏳ Your account is pending admin approval.");
               await signOut(auth);
               setCurrentUser(null);
@@ -41,7 +42,7 @@ function App() {
               return;
             }
 
-            if (userData.status === "rejected") {
+            if (status === "rejected") {
               alert("❌ Your account request was rejected by admin.");
               await signOut(auth);
               setCurrentUser(null);

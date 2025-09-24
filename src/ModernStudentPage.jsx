@@ -65,6 +65,34 @@ function ModernStudentPage({ currentUser, onLogout }) {
     fetchServerNow();
   }, []);
 
+  // Auto-refresh at server midnight (prevents device time tampering)
+  useEffect(() => {
+    if (!serverEffectiveDate) return;
+    let stopped = false;
+    const functions = getFunctions();
+    const getServerNow = httpsCallable(functions, "getServerNow");
+
+    const checkAndReload = async () => {
+      try {
+        const res = await getServerNow();
+        const nextEffective = res?.data?.effectiveDate;
+        if (!stopped && nextEffective && nextEffective !== serverEffectiveDate) {
+          // New day started on server (00:00 IST) -> reload app
+          window.location.reload();
+        }
+      } catch (e) {
+        // ignore transient failures
+      }
+    };
+
+    // Check every 60 seconds; light-weight and robust against device time changes
+    const id = setInterval(checkAndReload, 60 * 1000);
+    return () => {
+      stopped = true;
+      clearInterval(id);
+    };
+  }, [serverEffectiveDate]);
+
   // Load user data and meals (wait for serverEffectiveDate)
   useEffect(() => {
     let unsubscribeUser = null;
@@ -85,34 +113,35 @@ function ModernStudentPage({ currentUser, onLogout }) {
         );
         const mealsSnap = await getDoc(mealsRef);
 
-        let mealsData = {};
-        if (mealsSnap.exists()) {
-          mealsData = mealsSnap.data();
-        }
+        const monthDocExists = mealsSnap.exists();
+        const mealsData = monthDocExists ? mealsSnap.data() : {};
 
-        // Default all future days to marked based on TRUSTED serverEffectiveDate
+        // Build UI-only defaults to guarantee future days are marked for this user
         const today = serverEffectiveDate; // YYYY-MM-DD from server
         const upcomingDays = getUpcomingDays();
+        const uiMeals = { ...mealsData };
 
         upcomingDays.forEach((day) => {
-          if (!mealsData[day.date]) {
-            if (day.date > today) {
-              // Future dates default to marked
-              mealsData[day.date] = {
-                breakfast: true,
-                lunch: true,
-                supper: true,
-              };
-            } else if (day.date < today) {
-              // Past dates default to unmarked
-              mealsData[day.date] = {
+          if (day.date > today) {
+            // Always show future dates as marked in the UI
+            uiMeals[day.date] = {
+              breakfast: true,
+              lunch: true,
+              supper: true,
+            };
+          } else if (day.date < today) {
+            // Past dates default to unmarked if missing
+            if (!uiMeals[day.date]) {
+              uiMeals[day.date] = {
                 breakfast: false,
                 lunch: false,
                 supper: false,
               };
-            } else {
-              // Today defaults to unmarked (and stays locked in UI)
-              mealsData[day.date] = {
+            }
+          } else {
+            // Today defaults to unmarked (and stays locked in UI) if missing
+            if (!uiMeals[day.date]) {
+              uiMeals[day.date] = {
                 breakfast: false,
                 lunch: false,
                 supper: false,
@@ -121,10 +150,38 @@ function ModernStudentPage({ currentUser, onLogout }) {
           }
         });
 
-        setMeals(mealsData);
+        setMeals(uiMeals);
 
-        // Save the updated meals data
-        await setDoc(mealsRef, mealsData, { merge: true });
+        // Persist only when month document did not exist (seed minimal structure)
+        if (!monthDocExists) {
+          await setDoc(mealsRef, mealsData, { merge: true });
+        }
+
+        // Also seed per-user meals in their user document if missing to keep Admin views consistent
+        try {
+          const userRefNow = doc(db, "users", currentUser.uid);
+          const userSnapNow = await getDoc(userRefNow);
+          const userMealsExisting = userSnapNow.exists() ? (userSnapNow.data().meals || {}) : {};
+          const userMealsSeed = { ...userMealsExisting };
+          let hasChange = false;
+          upcomingDays.forEach((day) => {
+            if (!userMealsSeed[day.date]) {
+              if (day.date > today) {
+                userMealsSeed[day.date] = { breakfast: true, lunch: true, supper: true, lastUpdated: serverTimestamp() };
+              } else if (day.date < today) {
+                userMealsSeed[day.date] = { breakfast: false, lunch: false, supper: false, lastUpdated: serverTimestamp() };
+              } else {
+                userMealsSeed[day.date] = { breakfast: false, lunch: false, supper: false, lastUpdated: serverTimestamp() };
+              }
+              hasChange = true;
+            }
+          });
+          if (hasChange) {
+            await setDoc(userRefNow, { meals: userMealsSeed }, { merge: true });
+          }
+        } catch (seedingErr) {
+          console.warn("User meals seeding skipped:", seedingErr);
+        }
 
         // Load weekday menu data
         const menuRef = doc(db, "weekdayMenu", "default");

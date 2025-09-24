@@ -173,17 +173,17 @@ function AdminPage({ onLogout, goToPointSystem }) {
         }
 
         allUsers.forEach((user) => {
-          const userMeals = user.meals || {};
           const isMonthlyUser = monthlyUsers.includes(user.email);
-          
+          if (!isMonthlyUser) return; // Only count added monthly users
+
+          const userMeals = user.meals || {};
           nextDays.forEach((day) => {
             const meals = userMeals[day];
             if (meals) {
-              // User has explicitly marked meals
               ["breakfast", "lunch", "supper"].forEach((meal) => {
                 if (meals[meal]) counts[day][meal] += 1;
               });
-            } else if (isMonthlyUser) {
+            } else {
               // Monthly user without explicit marking - assume they take all meals
               counts[day].breakfast += 1;
               counts[day].lunch += 1;

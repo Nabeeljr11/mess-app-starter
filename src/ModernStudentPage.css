@@ -605,25 +605,34 @@ body {
 
 .nav-item {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #f3f4f6;
   border: 1px solid #e5e7eb;
   cursor: pointer;
   width: 44px;
-  height: 44px;
+  height: 48px;
   border-radius: 14px;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
 .nav-item:hover { background: #e5e7eb; }
 
-.nav-item.active { background: #2563eb; border-color: #2563eb; }
+.nav-item.active { background: #2563eb; border-color: #2563eb; transform: translateY(-3px); }
 
-.nav-icon { font-size: 1.2rem; color: #111827; }
+.nav-icon { font-size: 1.2rem; color: #111827; line-height: 1; }
+.nav-item.active .nav-icon { color: #ffffff; }
 
-/* Hide labels for a clean icon-only bar */
-.nav-label { display: none; }
+/* Labels: hidden by default, visible on active */
+.nav-label {
+  display: none;
+  font-size: 10px;
+  margin-top: 2px;
+  color: #111827;
+  font-weight: 600;
+}
+.nav-item.active .nav-label { display: block; color: #ffffff; }
 
 /* Mobile Responsiveness */
 @media (max-width: 480px) {
@@ -669,7 +678,7 @@ body {
   }
   
   .bottom-nav { padding: 8px 6px; }
-  .nav-item { width: 42px; height: 42px; }
+  .nav-item { width: 42px; height: 46px; }
   .nav-icon { font-size: 1.05rem; }
 }
 
