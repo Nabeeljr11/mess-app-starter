@@ -116,20 +116,16 @@ function ModernStudentPage({ currentUser, onLogout }) {
         const monthDocExists = mealsSnap.exists();
         const mealsData = monthDocExists ? mealsSnap.data() : {};
 
-        // Build UI-only defaults to guarantee future days are marked for this user
+        // Build UI-only defaults:
+        // - Past days: default unmarked if missing
+        // - Today: default unmarked (locked)
+        // - Future days: default unmarked if missing (no auto-select on refresh)
         const today = serverEffectiveDate; // YYYY-MM-DD from server
         const upcomingDays = getUpcomingDays();
         const uiMeals = { ...mealsData };
 
         upcomingDays.forEach((day) => {
-          if (day.date > today) {
-            // Always show future dates as marked in the UI
-            uiMeals[day.date] = {
-              breakfast: true,
-              lunch: true,
-              supper: true,
-            };
-          } else if (day.date < today) {
+          if (day.date < today) {
             // Past dates default to unmarked if missing
             if (!uiMeals[day.date]) {
               uiMeals[day.date] = {
@@ -239,24 +235,23 @@ function ModernStudentPage({ currentUser, onLogout }) {
     }
 
     try {
-      const newMeals = { ...meals };
-
-      if (!newMeals[date]) {
-        newMeals[date] = { breakfast: true, lunch: true, supper: true };
+      // Call secure function which enforces server date checks
+      const functions = getFunctions();
+      const markMeal = httpsCallable(functions, "markMeal");
+      const res = await markMeal({ date, mealType });
+      if (res?.data?.status === "forbidden") {
+        alert("❌ Marking is locked for this date.");
+        return;
       }
-
-      newMeals[date][mealType] = !newMeals[date][mealType];
-
-      const mealsRef = doc(
-        db,
-        "meals",
-        `${currentYear}-${String(currentMonth).padStart(2, "0")}`
-      );
-      await setDoc(mealsRef, newMeals, { merge: true });
-
+      // Update local state with returned value
+      const value = !!res?.data?.value;
+      const newMeals = { ...meals };
+      const dayObj = newMeals[date] || { breakfast: false, lunch: false, supper: false };
+      newMeals[date] = { ...dayObj, [mealType]: value };
       setMeals(newMeals);
     } catch (error) {
       console.error("Error updating meal:", error);
+      alert("❌ Failed to update meal. Please try again.");
     }
   };
 

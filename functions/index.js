@@ -65,5 +65,13 @@ exports.markMeal = onCall(async (request) => {
 
   await mealsRef.set({ [date]: newForDay, _lastWriteAt: FieldValue.serverTimestamp() }, { merge: true });
 
+  // Also update user's own document to keep admin counts in sync
+  const userRef = db.collection("users").doc(userId);
+  const userSnap = await userRef.get();
+  const userMeals = userSnap.exists ? (userSnap.data().meals || {}) : {};
+  const userDay = userMeals[date] || { breakfast: false, lunch: false, supper: false };
+  const userUpdatedDay = { ...userDay, [mealType]: newValue, lastUpdated: FieldValue.serverTimestamp() };
+  await userRef.set({ meals: { [date]: userUpdatedDay } }, { merge: true });
+
   return { status: "ok", date, mealType, value: newValue };
 });

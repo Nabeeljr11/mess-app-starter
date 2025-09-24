@@ -6,6 +6,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 
 import LoginPage from "./LoginPage.jsx";
+import PushSetup from "./PushSetup.jsx";
 import SignupPage from "./SignupPage.jsx";
 import ResetPage from "./ResetPage.jsx";
 import AdminPage from "./AdminPage.jsx";
@@ -112,17 +113,20 @@ function App() {
 
   if (userRole === "admin") {
     if (adminView === "points") {
-      return <PointSystemPage goBack={() => setAdminView("dashboard")} />;
+      return <><PushSetup currentUser={currentUser} /><PointSystemPage goBack={() => setAdminView("dashboard")} /></>;
     }
     return (
-      <ModernAdminPage
-        onLogout={handleLogout}
-        goToPointSystem={() => setAdminView("points")}
-      />
+      <>
+        <PushSetup currentUser={currentUser} />
+        <ModernAdminPage
+          onLogout={handleLogout}
+          goToPointSystem={() => setAdminView("points")}
+        />
+      </>
     );
   }
 
-  return <ModernStudentPage currentUser={currentUser} onLogout={handleLogout} />;
+  return <><PushSetup currentUser={currentUser} /><ModernStudentPage currentUser={currentUser} onLogout={handleLogout} /></>;
 }
 
 export default App;
