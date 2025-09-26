@@ -27,8 +27,27 @@ try {
   // Ignore if Messaging can't initialize (e.g., offline or blocked)
 }
 
+// Focus or open the app when the user clicks the notification
+self.addEventListener('notificationclick', function(event) {
+  event.notification.close();
+  const targetUrl = (event.notification?.data && (event.notification.data.click_action || event.notification.data.link)) || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        // If our app is already open, focus it
+        const url = new URL(client.url);
+        if (url.pathname === '/' || url.pathname === targetUrl) {
+          return client.focus();
+        }
+      }
+      // Otherwise, open a new window
+      return clients.openWindow(targetUrl);
+    })
+  );
+});
+
 /* Simple PWA service worker for offline caching */
-const CACHE_NAME = 'mea-mess-cache-v1';
+const CACHE_NAME = 'mea-mess-cache-v2';
 const ASSETS = [
   '/',
   '/index.html',

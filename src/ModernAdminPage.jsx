@@ -24,6 +24,11 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   const [allUsers, setAllUsers] = useState([]);
   const [mealCounts, setMealCounts] = useState({});
   const [monthlyUsers, setMonthlyUsers] = useState([]);
+  const [monthlyUserRanges, setMonthlyUserRanges] = useState([]); // [{user: email|uid, from: 'YYYY-MM-DD', to: 'YYYY-MM-DD'}]
+  const [showRangesManager, setShowRangesManager] = useState(false);
+  const [rangeUser, setRangeUser] = useState("");
+  const [rangeFrom, setRangeFrom] = useState("");
+  const [rangeTo, setRangeTo] = useState("");
   const [exceptions, setExceptions] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
@@ -54,10 +59,26 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
   // Export today's per-user meal markings for monthly users only
   const exportTodaysMarkingsCSV = () => {
     const today = new Date().toISOString().split("T")[0];
+    const hasRanges = monthlyUserRanges && monthlyUserRanges.length > 0;
     const header = ["Name", "Email", "Breakfast", "Lunch", "Supper", "MarkKey"]; // MarkKey like X, B/L, 0
     const rows = [header];
     allUsers.forEach((user) => {
-      if (!monthlyUsers.includes(user.email)) return;
+      const userId = user.id;
+      const email = (user.email || "").toLowerCase();
+
+      // Determine inclusion based on ranges if present; else monthlyUsers fallback
+      let includeUser = false;
+      let userRanges = [];
+      if (hasRanges) {
+        userRanges = monthlyUserRanges.filter((r) => {
+          const u = String(r.user || "");
+          return u.toLowerCase() === email || u === userId;
+        });
+        includeUser = userRanges.length > 0;
+      } else {
+        includeUser = monthlyUsers.map((x) => String(x).toLowerCase()).includes(email) || monthlyUsers.includes(userId);
+      }
+      if (!includeUser) return;
       const name = user.name || user.email || "Unknown";
       const meals = (user.meals || {})[today];
       let b = false, l = false, s = false;
@@ -221,26 +242,34 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
         }
 
         // Load users
-        const usersRef = collection(db, "users");
-        const querySnapshot = await getDocs(usersRef);
-        const users = [];
-        querySnapshot.forEach((docSnap) => {
-          users.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        setAllUsers(users);
+      const usersRef = collection(db, "users");
+      const usersSnap = await getDocs(usersRef);
+      const userList = [];
+      usersSnap.forEach((doc) => userList.push({ id: doc.id, ...doc.data() }));
+      setAllUsers(userList);
 
         // Initialize empty meal counts - will be calculated by useEffect
         setMealCounts({});
 
-        // Load monthly users
-        const monthlyRef = doc(db, "monthlyUsers", currentKey);
-        const monthlySnap = await getDoc(monthlyRef);
-        if (monthlySnap.exists()) {
-          setMonthlyUsers(monthlySnap.data().users || []);
-        }
+        // Load monthly users for current month
+      const ref = doc(db, "monthlyUsers", currentKey);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        setMonthlyUsers(snap.data().users || []);
+      } else {
+        setMonthlyUsers([]);
+      }
 
-        // Load exceptions
-        const exceptionsRef = doc(db, "monthlyExceptions", currentKey);
+      // Load monthly user ranges
+      const rangesRef = doc(db, "monthlyUserRanges", currentKey);
+      const rangesSnap = await getDoc(rangesRef);
+      if (rangesSnap.exists()) {
+        setMonthlyUserRanges(rangesSnap.data().ranges || []);
+      } else {
+        setMonthlyUserRanges([]);
+      }
+
+      const exceptionsRef = doc(db, "monthlyExceptions", currentKey);
         const exceptionsSnap = await getDoc(exceptionsRef);
         if (exceptionsSnap.exists()) {
           setExceptions(exceptionsSnap.data().exceptions || []);
@@ -398,8 +427,9 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
       return;
     }
 
-    if (!monthlyUsers || monthlyUsers.length === 0) {
-      alert("⚠️ No users added for this month. Use Manage Monthly Users to add approved users.");
+    const hasRanges = (monthlyUserRanges && monthlyUserRanges.length > 0);
+    if (!hasRanges && (!monthlyUsers || monthlyUsers.length === 0)) {
+      alert("⚠️ No users added for this month. Use Manage Monthly Users or User Ranges to add users.");
       return;
     }
 
@@ -410,7 +440,6 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
     allUsers.forEach((user) => {
       if (!monthlyUsers.includes(user.email)) return;
 
-      const email = user.email || "Unknown";
       const displayName = user.name || email;
       const userMeals = user.meals || {};
       let totalPoints = 0;
@@ -419,7 +448,23 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
       const mealDates = Object.keys(userMeals).sort();
       const firstMealDate = mealDates.length > 0 ? mealDates[0] : todayStr;
 
-      const allowedSet = getAllowedDaysSet(email, from, to);
+      // Build allowed set based on ranges if present, otherwise exceptions
+      let allowedSet = null;
+      if (hasRanges) {
+        const merged = new Set();
+        userRanges.forEach((rg) => {
+          const start = new Date(rg.from) > new Date(from) ? new Date(rg.from) : new Date(from);
+          const end = new Date(rg.to) < new Date(to) ? new Date(rg.to) : new Date(to);
+          if (start.getTime() > end.getTime()) return;
+          for (let d = new Date(start); d.getTime() <= end.getTime(); d.setDate(d.getDate() + 1)) {
+            merged.add(d.toISOString().split("T")[0]);
+          }
+        });
+        // If user has ranges, they only get points within those days
+        allowedSet = merged;
+      } else {
+        allowedSet = getAllowedDaysSet(email, from, to);
+      }
 
       days.forEach((day) => {
         if (allowedSet && !allowedSet.has(day)) {
@@ -553,9 +598,20 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
 
       // Add to notifications collection
       await addDoc(collection(db, "notifications"), notification);
+
+      // Also trigger push notification via Cloud Function
+      try {
+        const functions = getFunctions();
+        const pushAll = httpsCallable(functions, "sendPushToAll");
+        const res = await pushAll({ message: newNotification, title: "MEA Mess" });
+        const { success = 0, failure = 0, total = 0 } = res?.data || {};
+        alert(`✅ Notification saved and push sent.\nTotal tokens: ${total}\nDelivered: ${success}\nFailed: ${failure}`);
+      } catch (e) {
+        console.error("sendPushToAll error", e);
+        alert("✅ Notification saved. ⚠️ Push delivery failed (function not deployed or error).\nCheck console and Firebase Functions logs.");
+      }
       
       setNewNotification("");
-      alert("✅ Notification sent to all users");
     } catch (error) {
       console.error("Error sending notification:", error);
       alert("⚠️ Error sending notification");
@@ -1133,7 +1189,15 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
                     generateReport(f, t);
                   }}
                 >
-                  Generate Report
+                  ▶️ Generate
+                </button>
+
+                <button 
+                  className="generate-btn" 
+                  style={{ marginLeft: 8 }}
+                  onClick={() => setShowRangesManager(true)}
+                >
+                  🗂️ Manage User Ranges
                 </button>
               </div>
 
@@ -1717,6 +1781,55 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
                   </div>
                 ))}
                 <button className="save-meal-btn" onClick={saveBunchDetails}>💾 Save Details</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Monthly User Ranges Manager Modal */}
+      {showRangesManager && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h2>Manage Monthly User Ranges</h2>
+              <button className="close-btn" onClick={() => setShowRangesManager(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="meal-editor-form">
+                <div className="form-group">
+                  <label>User (email or UID)</label>
+                  <select className="form-select" value={rangeUser} onChange={(e) => setRangeUser(e.target.value)}>
+                    <option value="">-- Choose user --</option>
+                    {allUsers.filter(u => ((u.status || '').toLowerCase() === 'approved')).map((u) => (
+                      <option key={u.id} value={u.email || u.id}>{u.name || u.email}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>From / To (YYYY-MM-DD)</label>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <input className="form-input" type="date" value={rangeFrom} onChange={(e) => setRangeFrom(e.target.value)} />
+                    <input className="form-input" type="date" value={rangeTo} onChange={(e) => setRangeTo(e.target.value)} />
+                  </div>
+                </div>
+                <button className="save-meal-btn" onClick={addRange}>➕ Add Range</button>
+
+                <div className="current-menu" style={{ marginTop: 16 }}>
+                  <h4>Current Ranges ({monthlyUserRanges.length})</h4>
+                  <div className="menu-items">
+                    {monthlyUserRanges.map((rg, idx) => (
+                      <div key={idx} className="menu-item" style={{ justifyContent: 'space-between' }}>
+                        <span>{rg.user}</span>
+                        <span>{rg.from} → {rg.to}</span>
+                        <button className="export-btn" onClick={() => removeRangeAt(idx)}>🗑️ Remove</button>
+                      </div>
+                    ))}
+                    {monthlyUserRanges.length === 0 && (
+                      <div className="no-requests">No ranges added</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

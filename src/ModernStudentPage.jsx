@@ -228,10 +228,23 @@ function ModernStudentPage({ currentUser, onLogout }) {
   const toggleMeal = async (date, mealType) => {
     if (!currentUser) return;
 
-    const today = serverEffectiveDate || new Date().toISOString().split("T")[0];
-    if (date === today) {
-      alert("❌ Today's marking is locked!");
-      return;
+    // Just-in-time server time check to avoid any stale client state or device time tricks
+    try {
+      const functions = getFunctions();
+      const getServerNow = httpsCallable(functions, "getServerNow");
+      const resNow = await getServerNow();
+      const serverToday = resNow?.data?.effectiveDate || serverEffectiveDate || new Date().toISOString().split("T")[0];
+      if (date <= serverToday) {
+        alert("❌ Marking is locked for today or past dates.");
+        return;
+      }
+    } catch (_) {
+      // If server time could not be fetched, fall back to the already-fetched serverEffectiveDate
+      const fallbackToday = serverEffectiveDate || new Date().toISOString().split("T")[0];
+      if (date <= fallbackToday) {
+        alert("❌ Marking is locked for today or past dates.");
+        return;
+      }
     }
 
     try {
@@ -251,7 +264,16 @@ function ModernStudentPage({ currentUser, onLogout }) {
       setMeals(newMeals);
     } catch (error) {
       console.error("Error updating meal:", error);
-      alert("❌ Failed to update meal. Please try again.");
+      const msg = (error && (error.message || error.code)) || "";
+      if (msg.includes("UNAUTHENTICATED")) {
+        alert("⚠️ Session expired. Please log in again.");
+        return;
+      }
+      if (msg.includes("PERMISSION_DENIED")) {
+        alert("❌ You don’t have permission to change this marking.");
+        return;
+      }
+      alert("❌ Failed to update meal. Please check your network and try again.");
     }
   };
 
@@ -433,16 +455,18 @@ function ModernStudentPage({ currentUser, onLogout }) {
                 <p>View past months</p>
               </div>
 
-              <div className="feature-card" onClick={() => setActiveTab("suggestions")}>
-                <div className="feature-icon">💡</div>
-                <h4>Suggestions</h4>
-                <p>Send feedback</p>
-              </div>
+              {/* Suggestions card removed; Menu card will take its place */}
 
               <div className="feature-card" onClick={() => setActiveTab("admin")}>
                 <div className="feature-icon">👨‍💼</div>
                 <h4>Contact Admin</h4>
                 <p>Get help</p>
+              </div>
+
+              <div className="feature-card" onClick={() => setActiveTab("menu")}>
+                <div className="feature-icon">📋</div>
+                <h4>Menu</h4>
+                <p>Weekday menu</p>
               </div>
             </div>
           </div>
@@ -813,13 +837,7 @@ function ModernStudentPage({ currentUser, onLogout }) {
           <span className="nav-label">Home</span>
         </button>
 
-        <button
-          className={`nav-item ${activeTab === "meals" ? "active" : ""}`}
-          onClick={() => setActiveTab("meals")}
-        >
-          <span className="nav-icon">🍽️</span>
-          <span className="nav-label">Meals</span>
-        </button>
+        {/* Meals button removed from footer for cleaner look; access via Home feature card */}
 
         <button
           className={`nav-item ${
@@ -831,13 +849,7 @@ function ModernStudentPage({ currentUser, onLogout }) {
           <span className="nav-label">Notifications</span>
         </button>
 
-        <button
-          className={`nav-item ${activeTab === "menu" ? "active" : ""}`}
-          onClick={() => setActiveTab("menu")}
-        >
-          <span className="nav-icon">📋</span>
-          <span className="nav-label">Menu</span>
-        </button>
+        {/* Menu button removed from footer for a cleaner look; access via Home feature card */}
 
         <button
           className={`nav-item ${activeTab === "fees" ? "active" : ""}`}
@@ -853,16 +865,6 @@ function ModernStudentPage({ currentUser, onLogout }) {
         >
           <span className="nav-icon">👥</span>
           <span className="nav-label">Admin</span>
-        </button>
-
-        <button
-          className={`nav-item ${
-            activeTab === "suggestions" ? "active" : ""
-          }`}
-          onClick={() => setActiveTab("suggestions")}
-        >
-          <span className="nav-icon">💡</span>
-          <span className="nav-label">Suggestions</span>
         </button>
       </div>
     </div>
