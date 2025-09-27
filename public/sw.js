@@ -47,10 +47,9 @@ self.addEventListener('notificationclick', function(event) {
 });
 
 /* Simple PWA service worker for offline caching */
-const CACHE_NAME = 'mea-mess-cache-v2';
+const CACHE_NAME = 'mea-mess-cache-v3';
+// Do NOT precache HTML to avoid stale first load. Cache only static assets.
 const ASSETS = [
-  '/',
-  '/index.html',
   '/manifest.webmanifest',
   '/logo.png',
   '/logo3.png',
