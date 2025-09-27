@@ -224,56 +224,51 @@ function ModernStudentPage({ currentUser, onLogout }) {
     return () => unsubscribe();
   }, []);
 
-  // Toggle meal selection (uses server-defined today)
+  // Insecure meal marking - writes directly from the client.
+  // This is a temporary measure for development on the free plan.
   const toggleMeal = async (date, mealType) => {
     if (!currentUser) return;
 
-    // Just-in-time server time check to avoid any stale client state or device time tricks
-    try {
-      const functions = getFunctions();
-      const getServerNow = httpsCallable(functions, "getServerNow");
-      const resNow = await getServerNow();
-      const serverToday = resNow?.data?.effectiveDate || serverEffectiveDate || new Date().toISOString().split("T")[0];
-      if (date <= serverToday) {
-        alert("❌ Marking is locked for today or past dates.");
-        return;
-      }
-    } catch (_) {
-      // If server time could not be fetched, fall back to the already-fetched serverEffectiveDate
-      const fallbackToday = serverEffectiveDate || new Date().toISOString().split("T")[0];
-      if (date <= fallbackToday) {
-        alert("❌ Marking is locked for today or past dates.");
-        return;
-      }
+    // Insecure client-side date check. This can be bypassed.
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(date);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    if (selectedDate.getTime() <= today.getTime()) {
+      alert("Marking is locked for today and past dates.");
+      return;
     }
 
+    // Optimistic UI update
+    const originalMeals = { ...meals }; // Keep a copy to revert on failure
+    const newMeals = { ...meals };
+    const dayObj = newMeals[date] || { breakfast: false, lunch: false, supper: false };
+    const newValue = !dayObj[mealType];
+    newMeals[date] = { ...dayObj, [mealType]: newValue };
+    setMeals(newMeals);
+
+    // Direct write to Firestore
     try {
-      // Call secure function which enforces server date checks
-      const functions = getFunctions();
-      const markMeal = httpsCallable(functions, "markMeal");
-      const res = await markMeal({ date, mealType });
-      if (res?.data?.status === "forbidden") {
-        alert("❌ Marking is locked for this date.");
-        return;
-      }
-      // Update local state with returned value
-      const value = !!res?.data?.value;
-      const newMeals = { ...meals };
-      const dayObj = newMeals[date] || { breakfast: false, lunch: false, supper: false };
-      newMeals[date] = { ...dayObj, [mealType]: value };
-      setMeals(newMeals);
+      const userRef = doc(db, "users", currentUser.uid);
+      const mealPath = `meals.${date}.${mealType}`;
+      await updateDoc(userRef, {
+        [mealPath]: newValue
+      });
+
+      // Also update the aggregated meals collection for admin view consistency
+      const monthKey = `${currentYear}-${String(currentMonth).padStart(2, "0")}`;
+      const mealsRef = doc(db, "meals", monthKey);
+      const aggMealPath = `${date}.${mealType}`;
+      await setDoc(mealsRef, { 
+        [date]: { [mealType]: newValue }
+      }, { merge: true });
+
     } catch (error) {
       console.error("Error updating meal:", error);
-      const msg = (error && (error.message || error.code)) || "";
-      if (msg.includes("UNAUTHENTICATED")) {
-        alert("⚠️ Session expired. Please log in again.");
-        return;
-      }
-      if (msg.includes("PERMISSION_DENIED")) {
-        alert("❌ You don’t have permission to change this marking.");
-        return;
-      }
-      alert("❌ Failed to update meal. Please check your network and try again.");
+      alert("❌ Failed to save meal. Reverting changes.");
+      // Revert UI on failure
+      setMeals(originalMeals);
     }
   };
 

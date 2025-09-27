@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isUser(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Checks if the requesting user has an 'isAdmin' flag set to true.
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // --- Collection Rules ---
+
+    // Admins can read/write all user data. 
+    // Students can only read/write their own document.
+    match /users/{uid} {
+      allow read, write: if isAdmin() || isUser(uid);
+    }
+
+    // Admins can manage all admin-only collections.
+    // Students can only read them.
+    match /monthlyUsers/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /monthlyExceptions/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /monthlyUserRanges/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /settings/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /weekdayMenu/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /messBunch/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /notifications/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+    match /suggestions/{docId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // For the insecure free-plan model: any signed-in user can write to the aggregated meals doc.
+    match /meals/{docId} {
+      allow read, write: if isSignedIn();
+    }
+
+    // Students can only read their own fees data. Admins can manage all fees.
+    match /fees/{uid} {
+      allow read: if isUser(uid) || isAdmin();
+      allow write: if isAdmin();
+    }
+  }
+}

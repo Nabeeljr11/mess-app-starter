@@ -185,48 +185,59 @@ function ModernAdminPage({ onLogout, goToPointSystem }) {
     return () => { stopped = true; clearInterval(id); };
   }, [serverEffectiveDate]);
 
-  // Recalculate meal counts when monthly users change
+  // Recalculate meal counts when monthly users or ranges change
   useEffect(() => {
-    if (allUsers.length > 0) {
-      const recalculateMealCounts = () => {
-        const counts = {};
-        const today = new Date();
-        const nextDays = [];
-        
-        for (let i = 0; i < 8; i++) {
-          const d = new Date(today);
-          d.setDate(today.getDate() + i);
-          const dateStr = d.toISOString().split("T")[0];
-          nextDays.push(dateStr);
-          counts[dateStr] = { breakfast: 0, lunch: 0, supper: 0 };
-        }
+    if (allUsers.length === 0) return;
 
-        allUsers.forEach((user) => {
-          const isMonthly = monthlyUsers.includes(user.email);
-          if (!isMonthly) return; // Only count meals for users included in the monthly list
-
-          const userMeals = user.meals || {};
-          nextDays.forEach((day) => {
-            const meals = userMeals[day];
-            if (meals) {
-              ["breakfast", "lunch", "supper"].forEach((meal) => {
-                if (meals[meal]) counts[day][meal] += 1;
-              });
-            } else if (day > new Date().toISOString().split("T")[0]) {
-              // Monthly user without explicit marking for a future day -> assume all meals
-              counts[day].breakfast += 1;
-              counts[day].lunch += 1;
-              counts[day].supper += 1;
-            }
-          });
-        });
-
-        setMealCounts(counts);
-      };
-
-      recalculateMealCounts();
+    const counts = {};
+    const today = new Date();
+    const nextDays = [];
+    for (let i = 0; i < 8; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const dateStr = d.toISOString().split("T")[0];
+      nextDays.push(dateStr);
+      counts[dateStr] = { breakfast: 0, lunch: 0, supper: 0 };
     }
-  }, [allUsers, monthlyUsers]);
+
+    const hasRanges = monthlyUserRanges && monthlyUserRanges.length > 0;
+
+    allUsers.forEach((user) => {
+      const userId = user.id;
+      const email = (user.email || "").toLowerCase();
+
+      let includeUser = false;
+      if (hasRanges) {
+        const userRanges = monthlyUserRanges.filter((r) => {
+          const u = String(r.user || "");
+          return u.toLowerCase() === email || u === userId;
+        });
+        includeUser = userRanges.length > 0;
+      } else {
+        includeUser = monthlyUsers.map((x) => String(x).toLowerCase()).includes(email) || monthlyUsers.includes(userId);
+      }
+
+      if (includeUser) {
+        const userMeals = user.meals || {};
+        nextDays.forEach((dateStr) => {
+          const dayMeals = userMeals[dateStr];
+          // For meal counts, if a user hasn't marked a future day, assume they are taking all meals.
+          // This matches the logic for points generation where unmarked future days are counted.
+          if (!dayMeals && dateStr > today.toISOString().split("T")[0]) {
+            counts[dateStr].breakfast++;
+            counts[dateStr].lunch++;
+            counts[dateStr].supper++;
+          } else if (dayMeals) {
+            if (dayMeals.breakfast) counts[dateStr].breakfast++;
+            if (dayMeals.lunch) counts[dateStr].lunch++;
+            if (dayMeals.supper) counts[dateStr].supper++;
+          }
+        });
+      }
+    });
+
+    setMealCounts(counts);
+  }, [allUsers, monthlyUsers, monthlyUserRanges, currentMonth, currentYear]);
 
   // Load admin data
   useEffect(() => {
